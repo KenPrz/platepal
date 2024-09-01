@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:platepal/pages/SearchByIngredientsPage.dart';
 import 'package:platepal/pages/SearchByRecipePage.dart';
 import 'package:platepal/pages/AccessMealPlannerPage.dart';
+import 'package:platepal/pages/StarredRecipesPage.dart';
 import 'package:platepal/components/AppBar.dart';
 
 class Home extends StatelessWidget {
@@ -71,6 +72,16 @@ class Home extends StatelessWidget {
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const MealPlannerPage()),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildButton(
+                          context,
+                          'Starred Recipes',
+                          Icons.star,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const StarredRecipesPage()),
                           ),
                         ),
                       ],

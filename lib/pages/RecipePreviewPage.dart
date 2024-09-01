@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:platepal/database_helper.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import 'package:platepal/components/AddToMealPlannerCard.dart';
 
 class RecipePreviewPage extends StatefulWidget {
   final int recipeId;
@@ -9,6 +10,7 @@ class RecipePreviewPage extends StatefulWidget {
   const RecipePreviewPage({super.key, required this.recipeId});
 
   @override
+  // ignore: library_private_types_in_public_api
   _RecipePreviewPageState createState() => _RecipePreviewPageState();
 }
 
@@ -57,9 +59,12 @@ class _RecipePreviewPageState extends State<RecipePreviewPage> {
         color: Colors.grey,
       ),
       materialProgressColors: ChewieProgressColors(
+        // ignore: use_build_context_synchronously
         playedColor: Theme.of(context).primaryColor,
+        // ignore: use_build_context_synchronously
         handleColor: Theme.of(context).primaryColor,
         backgroundColor: Colors.grey,
+        // ignore: use_build_context_synchronously
         bufferedColor: Theme.of(context).primaryColorLight,
       ),
     );
@@ -129,6 +134,11 @@ class _RecipePreviewPageState extends State<RecipePreviewPage> {
                       _buildInfoCard(
                         title: 'Instructions',
                         content: _buildNumberedInstructions(recipe['instructions']),
+                      ),
+                      const SizedBox(height: 16),
+                      AddToMealPlannerCard(
+                        recipeId: widget.recipeId,
+                        recipeName: recipe['name'],
                       ),
                       const SizedBox(height: 16),
                       _buildInfoCard(

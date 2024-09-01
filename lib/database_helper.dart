@@ -50,7 +50,8 @@ class DatabaseHelper {
           rethrow;
         }
 
-        List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+        List<int> bytes =
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
 
         try {
           await File(path).writeAsBytes(bytes, flush: true);
@@ -64,15 +65,17 @@ class DatabaseHelper {
       }
 
       return await openDatabase(
-        path, 
+        path,
         version: 1,
         onCreate: (Database db, int version) async {
-          print("onCreate called. This should not happen with a pre-populated database.");
+          print(
+              "onCreate called. This should not happen with a pre-populated database.");
         },
         onOpen: (Database db) async {
           print("Database opened successfully.");
           var tables = await db.query('sqlite_master', columns: ['name']);
-          print("Tables in the database: ${tables.map((e) => e['name']).toList()}");
+          print(
+              "Tables in the database: ${tables.map((e) => e['name']).toList()}");
         },
       );
     } catch (e) {
@@ -89,7 +92,8 @@ class DatabaseHelper {
         print("Failed to load asset from: $path");
       }
     }
-    throw Exception("Could not find the database asset in any of the expected locations");
+    throw Exception(
+        "Could not find the database asset in any of the expected locations");
   }
 
   Future<List<Map<String, dynamic>>> queryAllRecipes() async {
@@ -129,20 +133,31 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> updateMealPlan(String day, String mealType, int recipeId) async {
-    try {
-      Database db = await instance.database;
-      var result = await db.insert('meal_plan', {
-        'day_of_week': day,
-        'meal_of_day': mealType,
-        'recipe_id': recipeId
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-      print("Updated meal plan: $day $mealType with recipe $recipeId");
-      return result;
-    } catch (e) {
-      print("Error updating meal plan: $e");
-      rethrow;
+  Future<bool> mealPlanEntryExists(
+      String day, String meal, int recipeId) async {
+    final db = await database;
+    final result = await db.query(
+      'meal_plan',
+      where: 'day_of_week = ? AND meal_of_day = ? AND recipe_id = ?',
+      whereArgs: [day, meal, recipeId],
+    );
+    return result.isNotEmpty;
+  }
+
+  Future<int> updateMealPlan(String day, String meal, int recipeId) async {
+    final db = await database;
+
+    // Check if entry already exists
+    bool exists = await mealPlanEntryExists(day, meal, recipeId);
+    if (exists) {
+      // Entry already exists, return -1 to indicate no change
+      return -1;
     }
+
+    // Entry doesn't exist, insert new entry
+    return await db.insert('meal_plan',
+        {'day_of_week': day, 'meal_of_day': meal, 'recipe_id': recipeId},
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<Map<String, dynamic>>> getMealPlan() async {
@@ -218,7 +233,8 @@ class DatabaseHelper {
     try {
       Database db = await instance.database;
       int id = row['id'];
-      var result = await db.update('recipes', row, where: 'id = ?', whereArgs: [id]);
+      var result =
+          await db.update('recipes', row, where: 'id = ?', whereArgs: [id]);
       print("Updated recipe with id: $id");
       return result;
     } catch (e) {
@@ -289,7 +305,8 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<Map<String, dynamic>>> queryIngredientsByCategory(String category) async {
+  Future<List<Map<String, dynamic>>> queryIngredientsByCategory(
+      String category) async {
     try {
       Database db = await instance.database;
       var result = await db.rawQuery('''
@@ -306,7 +323,8 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<Map<String, dynamic>>> searchRecipesByIngredients(List<int> ingredientIds) async {
+  Future<List<Map<String, dynamic>>> searchRecipesByIngredients(
+      List<int> ingredientIds) async {
     try {
       Database db = await instance.database;
       String placeholders = List.filled(ingredientIds.length, '?').join(',');
@@ -329,13 +347,15 @@ class DatabaseHelper {
     }
   }
 
-  Future<void> insertRecipeIngredients(int recipeId, List<Map<String, dynamic>> ingredients) async {
+  Future<void> insertRecipeIngredients(
+      int recipeId, List<Map<String, dynamic>> ingredients) async {
     try {
       Database db = await instance.database;
       await db.transaction((txn) async {
         // First, delete existing ingredients for this recipe
-        await txn.delete('recipe_ingredients', where: 'recipe_id = ?', whereArgs: [recipeId]);
-        
+        await txn.delete('recipe_ingredients',
+            where: 'recipe_id = ?', whereArgs: [recipeId]);
+
         // Then insert the new ingredients
         for (var ingredient in ingredients) {
           await txn.insert('recipe_ingredients', {
@@ -353,4 +373,47 @@ class DatabaseHelper {
       rethrow;
     }
   }
+
+  Future<List<Map<String, dynamic>>> queryStarredRecipes() async {
+    try {
+      Database db = await instance.database;
+      var result = await db.rawQuery('''
+      SELECT recipes.*, recipe_categories.name as category_name
+      FROM recipes
+      JOIN recipe_categories ON recipes.category_id = recipe_categories.id
+      WHERE recipes.is_starred = 1
+    ''');
+      print("Queried ${result.length} starred recipes");
+      return result;
+    } catch (e) {
+      print("Error querying starred recipes: $e");
+      rethrow;
+    }
+  }
+
+Future<List<Map<String, dynamic>>> getMealPlanEntriesForRecipe(int recipeId) async {
+  final db = await database;
+  return await db.query(
+    'meal_plan',
+    columns: ['id', 'day_of_week', 'meal_of_day'],
+    where: 'recipe_id = ?',
+    whereArgs: [recipeId],
+  );
+}
+  Future<void> removeRecipeFromMealPlan(int recipeId) async {
+  final db = await database;
+  await db.delete(
+    'meal_plan',
+    where: 'recipe_id = ?',
+    whereArgs: [recipeId],
+  );
+}
+Future<void> removeMealPlanEntry(int entryId) async {
+  final db = await database;
+  await db.delete(
+    'meal_plan',
+    where: 'id = ?',
+    whereArgs: [entryId],
+  );
+}
 }

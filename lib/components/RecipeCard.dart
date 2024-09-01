@@ -1,16 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:platepal/pages/RecipePreviewPage.dart';
+import 'package:platepal/database_helper.dart';
 
-class RecipeCard extends StatelessWidget {
+class RecipeCard extends StatefulWidget {
   final Map<String, dynamic> recipe;
   final int recipeId;
+  final VoidCallback? onStarToggle;
   final double imageHeight = 200.0; // Fixed height for the image
 
   const RecipeCard({
-    Key? key,
+    super.key,
     required this.recipe,
     required this.recipeId,
-  }) : super(key: key);
+    this.onStarToggle,
+  });
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _RecipeCardState createState() => _RecipeCardState();
+}
+
+class _RecipeCardState extends State<RecipeCard> {
+  late bool isStarred;
+
+  @override
+  void initState() {
+    super.initState();
+    isStarred = widget.recipe['is_starred'] == 1;
+  }
+
+  void _toggleStar() async {
+    final newStarredValue = isStarred ? 0 : 1;
+    await DatabaseHelper.instance.updateRecipeStarred(widget.recipeId, newStarredValue);
+    setState(() {
+      isStarred = !isStarred;
+    });
+    widget.onStarToggle?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +45,7 @@ class RecipeCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => RecipePreviewPage(recipeId: recipeId),
+            builder: (context) => RecipePreviewPage(recipeId: widget.recipeId),
           ),
         );
       },
@@ -35,13 +61,13 @@ class RecipeCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   child: Image.asset(
-                    'assets/images/${recipe['img'] ?? 'default_recipe.jpg'}',
-                    height: imageHeight,
+                    'assets/images/${widget.recipe['img'] ?? 'default_recipe.jpg'}',
+                    height: widget.imageHeight,
                     width: double.infinity,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        height: imageHeight,
+                        height: widget.imageHeight,
                         color: Colors.grey[300],
                         child: const Center(
                           child: Icon(Icons.error, color: Colors.red),
@@ -50,12 +76,15 @@ class RecipeCard extends StatelessWidget {
                     },
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Icon(
-                    Icons.star,
-                    color: recipe['is_starred'] == 1 ? Colors.amber : Colors.white,
-                    size: 28,
+                GestureDetector(
+                  onTap: _toggleStar,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(
+                      isStarred ? Icons.star : Icons.star_border,
+                      color: isStarred ? Colors.amber : Colors.white,
+                      size: 28,
+                    ),
                   ),
                 ),
               ],
@@ -66,7 +95,7 @@ class RecipeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recipe['name'],
+                    widget.recipe['name'],
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -76,7 +105,7 @@ class RecipeCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Difficulty: ${recipe['difficulty'] ?? 'N/A'}',
+                    'Difficulty: ${widget.recipe['difficulty'] ?? 'N/A'}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],
@@ -84,7 +113,7 @@ class RecipeCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Calories: ${recipe['calories'] ?? 'N/A'} kcal',
+                    'Calories: ${widget.recipe['calories'] ?? 'N/A'} kcal',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],

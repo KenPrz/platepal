@@ -68,6 +68,15 @@ class _SearchByRecipePageState extends State<SearchByRecipePage> with TickerProv
     }
   }
 
+  Future<void> _refreshRecipes() async {
+    final updatedRecipes = await DatabaseHelper.instance.queryAllRecipes();
+    if (mounted) {
+      setState(() {
+        _recipes = updatedRecipes;
+      });
+    }
+  }
+
   void _showSearchModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -127,6 +136,10 @@ class _SearchByRecipePageState extends State<SearchByRecipePage> with TickerProv
                                   child: RecipeCard(
                                     recipe: _searchResults[index],
                                     recipeId: _searchResults[index]['id'],
+                                    onStarToggle: () {
+                                      _refreshRecipes();
+                                      setModalState(() {});
+                                    },
                                   ),
                                 );
                               },
@@ -173,6 +186,9 @@ class _SearchByRecipePageState extends State<SearchByRecipePage> with TickerProv
                       child: RecipeCard(
                         recipe: recipe,
                         recipeId: recipe['id'],
+                        onStarToggle: () {
+                          _refreshRecipes();
+                        },
                       ),
                     );
                   },

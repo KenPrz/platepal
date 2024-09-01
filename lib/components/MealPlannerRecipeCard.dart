@@ -17,54 +17,58 @@ class MealPlannerRecipeCard extends StatelessWidget {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/${recipe['img'] ?? 'default_recipe.jpg'}',
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    recipe['name'],
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Difficulty: ${recipe['difficulty']}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline, color: Colors.green),
-                  onPressed: onAdd,
-                  tooltip: 'Add to meal plan',
+      child: InkWell(
+        onTap: onPreview,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/${recipe['img'] ?? 'default_recipe.jpg'}',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.visibility_outlined, color: Colors.blue),
-                  onPressed: onPreview,
-                  tooltip: 'Preview recipe',
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recipe['name'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Difficulty: ${recipe['difficulty'] ?? 'N/A'}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    Text(
+                      'Calories: ${recipe['calories'] ?? 'N/A'} kcal',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: onAdd,
+                color: Theme.of(context).primaryColor,
+              ),
+            ],
+          ),
         ),
       ),
     );
